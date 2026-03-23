@@ -36,28 +36,25 @@ export function useSubscription(
 	pollInterval = 5000,
 ) {
 	const id = `${contractId}:${topic}`
-	paging[id] = paging[id] || {}
 
 	React.useEffect(() => {
-		let timeoutId: NodeJS.Timeout | null = null
+		const currentPaging = paging[id] ?? (paging[id] = {})
+		let timeoutId: ReturnType<typeof setTimeout> | null = null
 		let stop = false
 
 		async function pollEvents(): Promise<void> {
-			const entry = paging[id]
-			if (!entry) return
 			try {
-				if (!entry.lastLedgerStart) {
+				if (!currentPaging.lastLedgerStart) {
 					const latestLedgerState = await server.getLatestLedger()
-					entry.lastLedgerStart = latestLedgerState.sequence
+					currentPaging.lastLedgerStart = latestLedgerState.sequence
 				}
 
-				// lastLedgerStart is now guaranteed to be a number
-				const lastLedger = entry.lastLedgerStart
+				const lastLedger = currentPaging.lastLedgerStart
 
 				const response = await server.getEvents(
-					entry.pagingToken
+					currentPaging.pagingToken
 						? {
-								cursor: entry.pagingToken,
+								cursor: currentPaging.pagingToken,
 								filters: [
 									{
 										contractIds: [contractId],
@@ -81,9 +78,9 @@ export function useSubscription(
 							},
 				)
 
-				entry.pagingToken = undefined
+				currentPaging.pagingToken = undefined
 				if (response.latestLedger) {
-					entry.lastLedgerStart = response.latestLedger
+					currentPaging.lastLedgerStart = response.latestLedger
 				}
 				if (response.events && response.events.length > 0) {
 					response.events.forEach((event) => {
@@ -96,9 +93,8 @@ export function useSubscription(
 							)
 						}
 					})
-					// Store the cursor from the response for pagination
 					if (response.cursor) {
-						entry.pagingToken = response.cursor
+						currentPaging.pagingToken = response.cursor
 					}
 				}
 			} catch (error) {
@@ -113,7 +109,9 @@ export function useSubscription(
 		void pollEvents()
 
 		return () => {
-			if (timeoutId != null) clearTimeout(timeoutId)
+			if (timeoutId != null) {
+				clearTimeout(timeoutId)
+			}
 			stop = true
 		}
 	}, [contractId, topic, onEvent, id, pollInterval])

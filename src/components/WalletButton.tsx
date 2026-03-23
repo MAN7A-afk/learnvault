@@ -34,7 +34,7 @@ export const WalletButton = () => {
 			}}
 		>
 			<Text as="div" size="sm">
-				{t("wallet.balance", { amount: balances?.xlm?.balance ?? "-" })}
+				{t("wallet.balance", { amount: balances?.lrn?.balance ?? "-" })}
 			</Text>
 
 			<div id="modalContainer">

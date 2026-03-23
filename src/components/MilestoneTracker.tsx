@@ -1,4 +1,3 @@
-import confetti from "canvas-confetti"
 import React, { useState } from "react"
 import { useTranslation } from "react-i18next"
 import { useCourse } from "../hooks/useCourse"
@@ -22,10 +21,19 @@ function MilestoneStep({
 	courseId: string
 	milestone: Milestone
 }) {
-	const { status, txHash, completeMilestone } = useCourse(
-		courseId,
-		milestone.id,
-	)
+	const { getCourseProgress, completeMilestone, isCompletingMilestone } =
+		useCourse()
+	const progress = getCourseProgress(courseId)
+	const isCompleted = progress.completedMilestoneIds.includes(milestone.id)
+	const hasPrevious =
+		milestone.id <= 1 ||
+		progress.completedMilestoneIds.includes(milestone.id - 1)
+	const status = isCompleted
+		? "completed"
+		: hasPrevious
+			? "in_progress"
+			: "locked"
+	const txHash: string | undefined = undefined
 	const { t, i18n } = useTranslation()
 
 	const [isCompleting, setIsCompleting] = useState(false)
@@ -37,15 +45,7 @@ function MilestoneStep({
 		try {
 			// Optimistically UI changes within useCourse
 			// wait for completion
-			await completeMilestone()
-
-			// Fire confetti from the element position approximately
-			void confetti({
-				particleCount: 150,
-				spread: 80,
-				origin: { y: 0.6 },
-				colors: ["#10b981", "#3b82f6", "#f59e0b", "#ffffff"],
-			})
+			await completeMilestone(courseId, milestone.id)
 		} catch (err) {
 			console.error("Failed to complete milestone:", err)
 		} finally {
@@ -95,9 +95,9 @@ function MilestoneStep({
 						<button
 							className={styles.actionBtn}
 							onClick={handleComplete}
-							disabled={isCompleting}
+							disabled={isCompleting || isCompletingMilestone}
 						>
-							{isCompleting
+							{isCompleting || isCompletingMilestone
 								? t("home.milestones.submittingText")
 								: t("home.milestones.markComplete")}
 						</button>
