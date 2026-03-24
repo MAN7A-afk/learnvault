@@ -1,91 +1,9 @@
-import { Pool } from "pg";
-import { z } from "zod";
-
-const dbEnvSchema = z.object({
-  DATABASE_URL: z.string().optional()
-});
-
-const env = dbEnvSchema.parse(process.env);
-
-// Mock implementation for when Postgres is not available
-class MockPool {
-  private data: any[] = [];
-  private votes: any[] = [];
-
-  async connect() {
-    return {
-      query: (text: string, params: any[]) => this.query(text, params),
-      release: () => {}
-    };
-  }
-
-  async query(text: string, params: any[] = []) {
-    console.log("Mock DB Query:", text, params);
-    
-    if (text.includes("CREATE TABLE")) return { rows: [] };
-    
-    if (text.includes("SELECT * FROM comments")) {
-      const pid = params[0];
-      return { rows: this.data.filter(c => c.proposal_id === pid).sort((a,b) => b.is_pinned - a.is_pinned || b.created_at - a.created_at) };
-    }
-
-    if (text.includes("INSERT INTO comments")) {
-      const newComment = {
-        id: this.data.length + 1,
-        proposal_id: params[0],
-        author_address: params[1],
-        content: params[2],
-        parent_id: params[3],
-        upvotes: 0,
-        downvotes: 0,
-        is_pinned: false,
-        created_at: new Date().toISOString()
-      };
-      this.data.push(newComment);
-      return { rows: [newComment] };
-    }
-
-    if (text.includes("SELECT COUNT(*) FROM comments")) {
-        // Simple spam check mock
-        return { rows: [{ count: "0" }] };
-    }
-
-    if (text.includes("UPDATE comments SET")) {
-        const id = params[0];
-        const comment = this.data.find(c => c.id == id);
-        if (comment) {
-            if (text.includes("upvotes = upvotes + 1")) comment.upvotes++;
-            if (text.includes("downvotes = downvotes + 1")) comment.downvotes++;
-            if (text.includes("is_pinned = TRUE")) {
-                this.data.forEach(c => { if(c.proposal_id === comment.proposal_id) c.is_pinned = false; });
-                comment.is_pinned = true;
-            }
-        }
-        return { rows: [comment] };
-    }
-
-    if (text.includes("DELETE FROM comments")) {
-        const id = params[0];
-        this.data = this.data.filter(c => c.id != id);
-        return { rowCount: 1 };
-    }
-
-    return { rows: [], rowCount: 0 };
-  }
+export type DbClient = {
+	connected: boolean
 }
 
-let activePool: any;
-
-try {
-  if (env.DATABASE_URL) {
-    activePool = new Pool({ connectionString: env.DATABASE_URL });
-    console.log("Using Postgres at", env.DATABASE_URL);
-  } else {
-    throw new Error("No DATABASE_URL provided");
-  }
-} catch (e) {
-  console.warn("Fastify/Express: Database connection failed or not configured. Falling back to in-memory mock.");
-  activePool = new MockPool();
+export const db: DbClient = {
+	connected: false,
 }
 
 export const pool = activePool;
