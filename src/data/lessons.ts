@@ -20,21 +20,73 @@ When you feel ready, click the **Mark as Complete** button at the bottom of the 
 `
 
 export const lessons: Lesson[] = [
-	{ id: 1, courseId: "web3-fundamentals", title: "What makes ownership portable on the internet?", content: placeholderContent },
-	{ id: 2, courseId: "web3-fundamentals", title: "Wallets vs Accounts", content: placeholderContent },
-	{ id: 3, courseId: "web3-fundamentals", title: "Signing your first transaction", content: placeholderContent },
-	{ id: 1, courseId: "defi-protocols", title: "How liquidity pools turn deposits into markets", content: placeholderContent },
-	{ id: 2, courseId: "defi-protocols", title: "Automated Market Makers (AMMs)", content: placeholderContent },
-	{ id: 1, courseId: "smart-contract-foundations", title: "State, events, and the contract execution lifecycle", content: placeholderContent },
-	{ id: 2, courseId: "smart-contract-foundations", title: "Writing a basic storage contract", content: placeholderContent },
-	{ id: 1, courseId: "stellar-soroban-basics", title: "Your first Stellar transaction on testnet", content: placeholderContent },
-	{ id: 2, courseId: "stellar-soroban-basics", title: "Deploying a Soroban contract", content: placeholderContent },
+	{
+		id: 1,
+		courseId: "web3-fundamentals",
+		title: "What makes ownership portable on the internet?",
+		content: placeholderContent,
+	},
+	{
+		id: 2,
+		courseId: "web3-fundamentals",
+		title: "Wallets vs Accounts",
+		content: placeholderContent,
+	},
+	{
+		id: 3,
+		courseId: "web3-fundamentals",
+		title: "Signing your first transaction",
+		content: placeholderContent,
+	},
+	{
+		id: 1,
+		courseId: "defi-protocols",
+		title: "How liquidity pools turn deposits into markets",
+		content: placeholderContent,
+	},
+	{
+		id: 2,
+		courseId: "defi-protocols",
+		title: "Automated Market Makers (AMMs)",
+		content: placeholderContent,
+	},
+	{
+		id: 1,
+		courseId: "smart-contract-foundations",
+		title: "State, events, and the contract execution lifecycle",
+		content: placeholderContent,
+	},
+	{
+		id: 2,
+		courseId: "smart-contract-foundations",
+		title: "Writing a basic storage contract",
+		content: placeholderContent,
+	},
+	{
+		id: 1,
+		courseId: "stellar-soroban-basics",
+		title: "Your first Stellar transaction on testnet",
+		content: placeholderContent,
+	},
+	{
+		id: 2,
+		courseId: "stellar-soroban-basics",
+		title: "Deploying a Soroban contract",
+		content: placeholderContent,
+	},
 ]
 
 export const getCourseLessons = (courseId: string): Lesson[] => {
-	return lessons.filter((lesson) => lesson.courseId === courseId).sort((a, b) => a.id - b.id)
+	return lessons
+		.filter((lesson) => lesson.courseId === courseId)
+		.sort((a, b) => a.id - b.id)
 }
 
-export const getLesson = (courseId: string, lessonId: number): Lesson | undefined => {
-	return lessons.find((lesson) => lesson.courseId === courseId && lesson.id === lessonId)
+export const getLesson = (
+	courseId: string,
+	lessonId: number,
+): Lesson | undefined => {
+	return lessons.find(
+		(lesson) => lesson.courseId === courseId && lesson.id === lessonId,
+	)
 }
