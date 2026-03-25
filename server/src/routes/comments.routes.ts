@@ -1,6 +1,8 @@
 import { Router, type Response } from "express"
 import { pool } from "../db/index"
+import { createCommentBodySchema } from "../lib/zod-schemas"
 import { authMiddleware, type AuthRequest } from "../middleware/auth.middleware"
+import { validate } from "../middleware/validate.middleware"
 
 export const commentsRouter = Router()
 
@@ -43,12 +45,36 @@ commentsRouter.get("/proposals/:proposalId/comments", async (req, res) => {
 commentsRouter.post(
 	"/comments",
 	authMiddleware,
+	validate({
+		body: createCommentBodySchema,
+	}),
 	async (req: AuthRequest, res: Response) => {
-		const { proposalId, content, parentId } = req.body
-		const authorAddress = req.user?.address
+		const body = req.body as {
+			proposalId?: string
+			proposal_id?: string
+			content?: string
+			body?: string
+			parentId?: number
+			parent_id?: number
+			author_address?: string
+		}
+		const proposalId = body.proposalId ?? body.proposal_id ?? ""
+		const content = body.content ?? body.body ?? ""
+		const parentId = body.parentId ?? body.parent_id
+		const tokenAddress = req.user?.address ?? ""
+		const authorAddress = body.author_address ?? tokenAddress
 
-		if (!proposalId || !content) {
-			return res.status(400).json({ error: "Missing required fields" })
+		if (body.author_address && body.author_address !== tokenAddress) {
+			return res.status(400).json({
+				error: "Validation failed",
+				message: "Validation failed",
+				details: [
+					{
+						field: "author_address",
+						message: "author_address must match the authenticated user",
+					},
+				],
+			})
 		}
 
 		try {
