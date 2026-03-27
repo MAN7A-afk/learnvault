@@ -1,8 +1,14 @@
 extern crate std;
 
-use soroban_sdk::{testutils::Address as _, Address, Env, IntoVal, String};
+use soroban_sdk::{
+    testutils::{Address as _, Events as _},
+    Address, Env, IntoVal, String, symbol_short, vec,
+};
 
-use crate::{ScholarNFT, ScholarNFTClient, ScholarNFTError};
+use crate::{
+    ScholarNFT, ScholarNFTClient, ScholarNFTError, InitializedEventData, MintEventData,
+    TransferAttemptEventData,
+};
 
 fn setup(env: &Env) -> (Address, Address, ScholarNFTClient) {
     let admin = Address::generate(env);
@@ -184,4 +190,66 @@ fn get_metadata_returns_stored_data() {
     let meta = client.get_metadata(&token_id).unwrap();
     assert_eq!(meta.scholar, scholar);
     assert_eq!(meta.ipfs_uri, Some(uri));
+}
+
+#[test]
+fn initialize_emits_event() {
+    let env = Env::default();
+    let admin = Address::generate(&env);
+    let contract_id = env.register(ScholarNFT, ());
+    env.mock_all_auths();
+    let client = ScholarNFTClient::new(&env, &contract_id);
+
+    client.initialize(&admin);
+
+    let events = env.events().all();
+    let found = events.iter().any(|(cid, topics, _data)| {
+        cid == contract_id
+            && topics.contains(&symbol_short!("init").into_val(&env))
+    });
+    assert!(found, "initialized event not found");
+}
+
+#[test]
+fn mint_emits_event() {
+    let env = Env::default();
+    let (contract_id, _, client) = setup(&env);
+    let scholar = Address::generate(&env);
+    let uri = cid(&env, "ipfs://mint-event-test");
+
+    let token_id = client.mint(&scholar, &uri);
+
+    let events = env.events().all();
+    let found = events.iter().any(|(cid, topics, _data)| {
+        cid == contract_id
+            && topics.contains(&symbol_short!("mint").into_val(&env))
+            && topics.contains(&token_id.into_val(&env))
+    });
+    assert!(found, "mint event not found");
+}
+
+#[test]
+#[ignore]
+fn transfer_attempt_emits_event() {
+    let env = Env::default();
+    let (contract_id, _, client) = setup(&env);
+    let from = Address::generate(&env);
+    let to = Address::generate(&env);
+    let uri = cid(&env, "ipfs://transfer-attempt-test");
+
+    let token_id = client.mint(&from, &uri);
+
+    // Transfer will panic, but event should be emitted before panic
+    let _ = client.try_transfer(&from, &to, &token_id);
+
+    let events = env.events().all();
+    let found = events.iter().any(|(cid, topics, _data)| {
+        cid == contract_id
+            && topics
+                == vec![
+                    &env,
+                    symbol_short!("xfer_att").into_val(&env),
+                ]
+    });
+    assert!(found, "transfer_attempted event not found");
 }

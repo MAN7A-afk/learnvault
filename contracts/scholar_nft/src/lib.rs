@@ -35,6 +35,31 @@ pub enum DataKey {
 }
 
 // ---------------------------------------------------------------------------
+// Event data types
+// ---------------------------------------------------------------------------
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+#[contracttype]
+pub struct MintEventData {
+    pub owner: Address,
+    pub metadata_uri: String,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+#[contracttype]
+pub struct TransferAttemptEventData {
+    pub from: Address,
+    pub to: Address,
+    pub token_id: u64,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+#[contracttype]
+pub struct InitializedEventData {
+    pub admin: Address,
+}
+
+// ---------------------------------------------------------------------------
 // Errors
 // ---------------------------------------------------------------------------
 
@@ -69,6 +94,12 @@ impl ScholarNFT {
         env.storage()
             .instance()
             .set(&TOKEN_COUNTER_KEY, &0_u64);
+
+        // Emit initialized event
+        env.events().publish(
+            (symbol_short!("init"),),
+            InitializedEventData { admin },
+        );
     }
 
     /// Mint a soulbound Scholar NFT to `to`.
@@ -107,14 +138,23 @@ impl ScholarNFT {
 
         // Rich metadata
         let metadata = ScholarMetadata {
-            scholar: to,
+            scholar: to.clone(),
             program_name: metadata_uri.clone(),
             completion_date: env.ledger().timestamp(),
-            ipfs_uri: Some(metadata_uri),
+            ipfs_uri: Some(metadata_uri.clone()),
         };
         env.storage()
             .persistent()
             .set(&DataKey::Metadata(next_token_id), &metadata);
+
+        // Emit mint event
+        env.events().publish(
+            (symbol_short!("mint"), next_token_id),
+            MintEventData {
+                owner: to,
+                metadata_uri,
+            },
+        );
 
         next_token_id
     }
@@ -136,7 +176,16 @@ impl ScholarNFT {
     }
 
     /// Transfers are **always** rejected — Scholar NFTs are soulbound.
-    pub fn transfer(env: Env, _from: Address, _to: Address, _token_id: u64) {
+    pub fn transfer(env: Env, from: Address, to: Address, token_id: u64) {
+        // Emit transfer attempted event before panicking
+        env.events().publish(
+            (symbol_short!("xfer_att"),),
+            TransferAttemptEventData {
+                from,
+                to,
+                token_id,
+            },
+        );
         panic_with_error!(&env, ScholarNFTError::Soulbound)
     }
 
