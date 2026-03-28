@@ -26,7 +26,6 @@ function CommentSection({
 	const { t } = useTranslation()
 	const pollInterval = Number(import.meta.env.VITE_COMMENT_POLL_MS) || 15000
 	const [lastUpdated, setLastUpdated] = useState<Date>(new Date())
-
 	const commentInputId = useId()
 	const commentHintId = `${commentInputId}-hint`
 	const commentErrorId = `${commentInputId}-error`
