@@ -403,6 +403,18 @@ two-step build process:
    npx md-to-pdf docs/whitepaper.md
    ```
 
+
+   ---
+
+## Performance
+
+- Response compression enabled using Express `compression` middleware (gzip enabled)
+- Static assets are not served by the Express backend — caching is handled at the CDN/proxy layer (Nginx, Cloudflare, Vercel, etc.)
+- HTTP/2 is handled via reverse proxy (Nginx/Cloudflare/Vercel)
+- Express server runs HTTP/1.1 internally
+- Request latency logging middleware logs `METHOD URL - Xms` for every request
+
+
 ````
 
 ---

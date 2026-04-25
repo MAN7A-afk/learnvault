@@ -144,6 +144,16 @@ const openApiSpec = buildOpenApiSpec()
 const _ignoredOpenApiYaml = YAML.stringify(openApiSpec)
 
 app.set("trust proxy", 1)
+
+// Log request latency: METHOD URL - Xms
+app.use((req, res, next) => {
+	const start = Date.now()
+	res.on("finish", () => {
+		console.log(`${req.method} ${req.url} - ${Date.now() - start}ms`)
+	})
+	next()
+})
+
 app.use(requestLogger)
 
 app.use(
