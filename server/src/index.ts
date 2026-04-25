@@ -7,7 +7,7 @@ import compression from "compression"
 dotenv.config({ path: path.resolve(__dirname, "..", ".env") })
 
 import cors from "cors"
-import express from "express"
+import express, { type Request, type Response, type NextFunction } from "express"
 import helmet from "helmet"
 import morgan from "morgan"
 import swaggerUi from "swagger-ui-express"
@@ -146,7 +146,7 @@ const _ignoredOpenApiYaml = YAML.stringify(openApiSpec)
 app.set("trust proxy", 1)
 
 // Log request latency: METHOD URL - Xms
-app.use((req, res, next) => {
+app.use((req: Request, res: Response, next: NextFunction) => {
 	const start = Date.now()
 	res.on("finish", () => {
 		console.log(`${req.method} ${req.url} - ${Date.now() - start}ms`)
@@ -155,7 +155,7 @@ app.use((req, res, next) => {
 })
 
 // Cache-Control: API responses must never be cached
-app.use("/api", (_req, res, next) => {
+app.use("/api", (_req: Request, res: Response, next: NextFunction) => {
 	res.setHeader("Cache-Control", "no-store")
 	next()
 })

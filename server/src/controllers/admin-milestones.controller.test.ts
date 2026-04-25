@@ -75,6 +75,7 @@ const pendingReport = {
 	milestone_title: "Test Milestone",
 	milestone_number: 1,
 	lrn_reward: 100,
+	resubmission_count: 0,
 }
 
 const approvedAuditEntry = {
