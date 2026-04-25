@@ -1,4 +1,4 @@
-﻿CREATE TABLE IF NOT EXISTS scholarship_contributions (
+CREATE TABLE IF NOT EXISTS scholarship_contributions (
     id SERIAL PRIMARY KEY,
     proposal_id INTEGER REFERENCES proposals(id) ON DELETE CASCADE,
     donor_address VARCHAR(56) NOT NULL,
