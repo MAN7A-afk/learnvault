@@ -349,15 +349,20 @@ export const createCourse = async (
 		let description = ""
 		if (body.description) {
 			if (typeof body.description !== "string") {
-				res.status(400).json({ error: "description must be a string", field: "description" })
+				res
+					.status(400)
+					.json({ error: "description must be a string", field: "description" })
 				return
 			}
 			if (body.description.length > 2000) {
-				res.status(400).json({ error: "description must be 2000 characters or fewer", field: "description" })
+				res.status(400).json({
+					error: "description must be 2000 characters or fewer",
+					field: "description",
+				})
 				return
 			}
 			description = sanitizeHtml(body.description, {
-				allowedTags: ['p', 'br', 'strong', 'em', 'ul', 'ol', 'li'],
+				allowedTags: ["p", "br", "strong", "em", "ul", "ol", "li"],
 				allowedAttributes: {},
 			})
 		}
@@ -442,11 +447,14 @@ export const updateCourse = async (
 		}
 		if ("description" in body && typeof body.description === "string") {
 			if (body.description.length > 2000) {
-				res.status(400).json({ error: "description must be 2000 characters or fewer", field: "description" })
+				res.status(400).json({
+					error: "description must be 2000 characters or fewer",
+					field: "description",
+				})
 				return
 			}
 			const sanitizedDescription = sanitizeHtml(body.description, {
-				allowedTags: ['p', 'br', 'strong', 'em', 'ul', 'ol', 'li'],
+				allowedTags: ["p", "br", "strong", "em", "ul", "ol", "li"],
 				allowedAttributes: {},
 			})
 			addField("description", sanitizedDescription)
